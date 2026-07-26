@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تطبيق تدبير V1 - إدارة الموسم الدراسي</title>
+  <title>تطبيق تدبير V2 - إدارة الموسم الدراسي والتقويم السريع</title>
   <!-- Google Fonts: Cairo & Amiri -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,23 +54,34 @@
     .flash-red {
       animation: pulse-red 1.5s infinite;
     }
-    /* Yellow border/badge for 1st homework warning */
+
+    /* Flashing yellow effect for non-validation (24h) */
+    @keyframes pulse-yellow {
+      0%, 100% { background-color: #fef9c3; border-color: #eab308; color: #854d0e; }
+      50% { background-color: #fefce8; border-color: #fde047; color: #a16207; }
+    }
+    .flash-yellow {
+      animation: pulse-yellow 1.8s infinite;
+    }
+
+    /* Warning Yellow static */
     .warning-yellow {
       background-color: #fef9c3;
       border-color: #fde047;
       color: #854d0e;
     }
-    /* Printable styles for PDF Portrait */
+
+    /* Print portrait styling */
     @media print {
       @page {
-        size: portrait;
-        margin: 10mm;
+        size: A4 portrait;
+        margin: 12mm;
       }
       body * {
-        visibility: hidden;
+        visibility: hidden !important;
       }
       #print-area, #print-area * {
-        visibility: visible;
+        visibility: visible !important;
       }
       #print-area {
         position: absolute;
@@ -78,11 +89,13 @@
         top: 0;
         width: 100%;
         background: white !important;
+        display: block !important;
       }
       .no-print {
         display: none !important;
       }
     }
+
     /* Watermark style */
     .watermark-container {
       position: relative;
@@ -93,8 +106,8 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%) rotate(-35deg);
-      font-size: 3rem;
-      font-weight: bold;
+      font-size: 3.5rem;
+      font-weight: 900;
       color: rgba(37, 99, 235, 0.08);
       white-space: nowrap;
       pointer-events: none;
@@ -115,34 +128,40 @@
             <i class="fa-solid fa-graduation-cap"></i>
           </div>
           <div>
-            <h1 class="font-bold text-lg leading-tight">تدبير V1 <span class="text-xs bg-brand-500 text-white px-2 py-0.5 rounded-full font-normal">الموسم الدراسي</span></h1>
+            <h1 class="font-bold text-lg leading-tight">تدبير V2 <span class="text-xs bg-amber-500 text-slate-900 px-2 py-0.5 rounded-full font-black">2026/2027</span></h1>
             <p class="text-xs text-brand-100">فضاء الأستاذ الابتدائي</p>
           </div>
         </div>
 
         <!-- Desktop Navigation Tabs -->
-        <nav class="hidden md:flex space-x-1 space-x-reverse">
-          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 bg-brand-800 text-white shadow-sm">
+        <nav class="hidden md:flex space-x-1 space-x-reverse overflow-x-auto py-2">
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-brand-800 text-white shadow-sm">
             <i class="fa-solid fa-chart-pie"></i> لوحة القيادة
           </button>
-          <button onclick="switchTab('students')" id="nav-students" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 hover:bg-brand-600 text-brand-100">
+          <button onclick="switchTab('students')" id="nav-students" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 hover:bg-brand-600 text-brand-100">
             <i class="fa-solid fa-users"></i> قائمة التلاميذ
           </button>
-          <button onclick="switchTab('attendance')" id="nav-attendance" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 hover:bg-brand-600 text-brand-100">
+          <button onclick="switchTab('subjects')" id="nav-subjects" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 hover:bg-brand-600 text-brand-100">
+            <i class="fa-solid fa-book"></i> المواد والاختبارات
+          </button>
+          <button onclick="switchTab('holidays')" id="nav-holidays" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 hover:bg-brand-600 text-brand-100">
+            <i class="fa-solid fa-calendar-days"></i> العطل المدرسية
+          </button>
+          <button onclick="switchTab('attendance')" id="nav-attendance" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 hover:bg-brand-600 text-brand-100">
             <i class="fa-solid fa-clipboard-user"></i> تسجيل الغياب
           </button>
-          <button onclick="switchTab('alerts')" id="nav-alerts" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 hover:bg-brand-600 text-brand-100 relative">
+          <button onclick="switchTab('alerts')" id="nav-alerts" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 hover:bg-brand-600 text-brand-100 relative">
             <i class="fa-solid fa-bell"></i> تنبيهات هامة
-            <span id="alerts-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center border-2 border-brand-700">0</span>
+            <span id="alerts-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center border border-brand-700">0</span>
           </button>
-          <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 hover:bg-brand-600 text-brand-100">
+          <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 hover:bg-brand-600 text-brand-100">
             <i class="fa-solid fa-sliders"></i> البيانات والصيانة
           </button>
         </nav>
 
         <!-- Quick Action Add Student -->
         <div class="flex items-center gap-2">
-          <button onclick="openModal('addStudentModal')" class="bg-white text-brand-700 hover:bg-brand-50 px-3 py-1.5 rounded-lg text-sm font-bold shadow transition flex items-center gap-1.5">
+          <button onclick="openModal('addStudentModal')" class="bg-white text-brand-700 hover:bg-brand-50 px-3 py-1.5 rounded-lg text-xs font-bold shadow transition flex items-center gap-1.5">
             <i class="fa-solid fa-user-plus"></i>
             <span class="hidden sm:inline">إضافة تلميذ</span>
           </button>
@@ -153,27 +172,31 @@
 
   <!-- Mobile Navigation Bar -->
   <div class="md:hidden bg-brand-800 text-white border-t border-brand-600 fixed bottom-0 left-0 right-0 z-40 no-print">
-    <div class="grid grid-cols-5 text-center text-xs py-2">
+    <div class="grid grid-cols-6 text-center text-[10px] py-1.5">
       <button onclick="switchTab('dashboard')" class="flex flex-col items-center justify-center p-1 text-brand-100">
-        <i class="fa-solid fa-chart-pie text-lg"></i>
-        <span class="mt-1">الرئيسية</span>
+        <i class="fa-solid fa-chart-pie text-base"></i>
+        <span class="mt-0.5">الرئيسية</span>
       </button>
       <button onclick="switchTab('students')" class="flex flex-col items-center justify-center p-1 text-brand-100">
-        <i class="fa-solid fa-users text-lg"></i>
-        <span class="mt-1">التلاميذ</span>
+        <i class="fa-solid fa-users text-base"></i>
+        <span class="mt-0.5">التلاميذ</span>
+      </button>
+      <button onclick="switchTab('subjects')" class="flex flex-col items-center justify-center p-1 text-brand-100">
+        <i class="fa-solid fa-book text-base"></i>
+        <span class="mt-0.5">المواد</span>
+      </button>
+      <button onclick="switchTab('holidays')" class="flex flex-col items-center justify-center p-1 text-brand-100">
+        <i class="fa-solid fa-calendar-days text-base"></i>
+        <span class="mt-0.5">العطل</span>
       </button>
       <button onclick="switchTab('attendance')" class="flex flex-col items-center justify-center p-1 text-brand-100">
-        <i class="fa-solid fa-clipboard-user text-lg"></i>
-        <span class="mt-1">الغياب</span>
+        <i class="fa-solid fa-clipboard-user text-base"></i>
+        <span class="mt-0.5">الغياب</span>
       </button>
       <button onclick="switchTab('alerts')" class="flex flex-col items-center justify-center p-1 text-brand-100 relative">
-        <i class="fa-solid fa-bell text-lg"></i>
-        <span class="mt-1">التنبيهات</span>
-        <span id="alerts-badge-mobile" class="hidden absolute top-0 right-3 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">0</span>
-      </button>
-      <button onclick="switchTab('settings')" class="flex flex-col items-center justify-center p-1 text-brand-100">
-        <i class="fa-solid fa-sliders text-lg"></i>
-        <span class="mt-1">الإعدادات</span>
+        <i class="fa-solid fa-bell text-base"></i>
+        <span class="mt-0.5">التنبيهات</span>
+        <span id="alerts-badge-mobile" class="hidden absolute top-0 right-2 bg-red-500 text-white text-[9px] w-3.5 h-3.5 rounded-full flex items-center justify-center">0</span>
       </button>
     </div>
   </div>
@@ -181,7 +204,7 @@
   <!-- Main Content Container -->
   <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 mb-16 md:mb-0">
 
-    <!-- Dynamic Toast Alert Container -->
+    <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed top-20 left-4 z-50 space-y-2 pointer-events-none"></div>
 
     <!-- TAB 1: DASHBOARD (لوحة القيادة) -->
@@ -189,7 +212,7 @@
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h2 class="text-2xl font-bold text-slate-800">مرحباً بك، <span class="text-brand-600">الأستاذ محمد الغمري</span> 👋</h2>
-          <p class="text-slate-500 text-sm mt-1">تطبيق تدبير v1 - نظام المتابعة التربوية والتحفيز الذكي للطلاب</p>
+          <p class="text-slate-500 text-sm mt-1">تطبيق تدبير v2 - النظام الدراسي والتقويم السريع المدمج (2026/2027)</p>
         </div>
         <div class="flex items-center gap-3 bg-brand-50 p-3 rounded-xl border border-brand-100 w-full md:w-auto">
           <div class="bg-brand-600 text-white p-3 rounded-lg"><i class="fa-regular fa-calendar-check text-xl"></i></div>
@@ -205,22 +228,22 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
           <div class="bg-blue-100 text-blue-600 w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-user-graduate"></i></div>
           <div>
-            <div class="text-xs font-semibold text-slate-500">إجمالي التلاميذ</div>
+            <div class="text-xs font-semibold text-slate-500">إجمالي التلاميذ (الأفواج)</div>
             <div id="stat-total-students" class="text-2xl font-black text-slate-800">0</div>
           </div>
         </div>
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
           <div class="bg-emerald-100 text-emerald-600 w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-award"></i></div>
           <div>
-            <div class="text-xs font-semibold text-slate-500">التلميذ الأستاذ الحالي</div>
+            <div class="text-xs font-semibold text-slate-500">التلميذ الأستاذ المتصدر</div>
             <div id="stat-top-student" class="text-sm font-bold text-emerald-700 truncate max-w-[120px]">لا يوجد</div>
           </div>
         </div>
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
           <div class="bg-amber-100 text-amber-600 w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-book-open"></i></div>
           <div>
-            <div class="text-xs font-semibold text-slate-500">إنذارات الواجبات</div>
-            <div id="stat-hw-warnings" class="text-2xl font-black text-amber-600">0</div>
+            <div class="text-xs font-semibold text-slate-500">تعثرات التقويم السريع</div>
+            <div id="stat-test-fails" class="text-2xl font-black text-amber-600">0</div>
           </div>
         </div>
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
@@ -238,33 +261,39 @@
         <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-              <i class="fa-solid fa-trophy text-amber-500"></i> قائمة المتصدرين (الترتيب الفوري)
+              <i class="fa-solid fa-trophy text-amber-500"></i> قائمة المتصدرين اللحظية
             </h3>
-            <button onclick="switchTab('students')" class="text-xs font-bold text-brand-600 hover:underline">عرض الكل</button>
+            <button onclick="switchTab('students')" class="text-xs font-bold text-brand-600 hover:underline">عرض جميع التلاميذ</button>
           </div>
           <div id="top-students-list" class="space-y-3">
             <!-- Rendered by JS -->
           </div>
         </div>
 
-        <!-- Rules Summary Card -->
-        <div class="bg-brand-900 text-white p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+        <!-- Quick Subject Shortcuts -->
+        <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-sm flex flex-col justify-between">
           <div>
-            <h3 class="font-bold text-lg mb-3 flex items-center gap-2 text-brand-100">
-              <i class="fa-solid fa-star text-yellow-400"></i> قواعد النظام التحفيزي V4
+            <h3 class="font-bold text-lg mb-3 flex items-center gap-2 text-amber-400">
+              <i class="fa-solid fa-bolt"></i> اختبار سريع مباشر
             </h3>
-            <ul class="text-xs space-y-2 text-brand-100 list-disc list-inside leading-relaxed">
-              <li>عدم الوقوع في عدم إنجاز الواجبات: <span class="text-emerald-400 font-bold">+5 تلقائياً</span></li>
-              <li>عدم إنجاز الواجبات 1 مرة بالأسبوع: <span class="text-emerald-300 font-bold">+2</span> (إنذار أصفر)</li>
-              <li>عدم الإنجاز مرتين: <span class="text-red-300 font-bold">-2</span> | 3 مرات فأكثر: <span class="text-red-400 font-bold">-3 + استدعاء</span></li>
-              <li>تمتيز فرنسية/رياضيات: <span class="text-emerald-300 font-bold">+3</span> | نشاط علمي: <span class="text-emerald-300 font-bold">+2</span></li>
-              <li>الشغب المؤثر: <span class="text-red-300 font-bold">-2</span> | غياب غير مبرر 2+ آخر 10 أيام: <span class="text-red-400 font-bold">-3</span></li>
-              <li>مساعدة زميل (وسام التلميذ الأستاذ 24س): <span class="text-yellow-300 font-bold">+1</span></li>
-              <li>الانضباط الأسبوعي من الغياب غير المبرر: <span class="text-emerald-300 font-bold">+1 تلقائياً</span></li>
-            </ul>
+            <p class="text-xs text-slate-300 leading-relaxed mb-4">اختر المادة للقيام باختبار تقويمي سريع واستخراج نتائج المصادقة المباشرة:</p>
+            <div class="space-y-2">
+              <button onclick="openQuickTest('fr')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-between">
+                <span><i class="fa-solid fa-language ml-2"></i> اللغة الفرنسية</span>
+                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+              </button>
+              <button onclick="openQuickTest('math')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-between">
+                <span><i class="fa-solid fa-calculator ml-2"></i> الرياضيات</span>
+                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+              </button>
+              <button onclick="openQuickTest('sci')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-between">
+                <span><i class="fa-solid fa-flask ml-2"></i> النشاط العلمي</span>
+                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+              </button>
+            </div>
           </div>
-          <div class="mt-4 pt-4 border-t border-brand-700 text-[11px] text-brand-200 text-center">
-            تتم مراجعة النقاط والتحديث في الحين تلقائياً.
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400 text-center">
+            تحديث V2 - المدرس الابتدائي
           </div>
         </div>
       </div>
@@ -274,15 +303,15 @@
     <section id="tab-students" class="tab-content hidden space-y-6">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-          <h2 class="text-xl font-bold text-slate-800">قائمة التلاميذ الرسمية</h2>
-          <p class="text-xs text-slate-500">اضغط على اسم التلميذ للانتقال مباشرة إلى فضائه الخاص</p>
+          <h2 class="text-xl font-bold text-slate-800">قائمة التلاميذ (الفوجين)</h2>
+          <p class="text-xs text-slate-500">انقر على اسم التلميذ للانتقال مباشرة لفضائه الخاص وطبع بيانه</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <!-- Filter Level -->
           <select id="filter-level" onchange="renderStudentsList()" class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none">
-            <option value="ALL">جميع المستويات</option>
-            <option value="الخامس ابتدائي">الخامس ابتدائي</option>
-            <option value="السادس ابتدائي">السادس ابتدائي</option>
+            <option value="ALL">جميع الأفواج (40 تلميذاً)</option>
+            <option value="الخامس ابتدائي">الخامس ابتدائي (20 تلميذ)</option>
+            <option value="السادس ابتدائي">السادس ابتدائي (20 تلميذ)</option>
           </select>
           <!-- Search input -->
           <div class="relative flex-1 sm:w-64">
@@ -301,1248 +330,52 @@
       </div>
     </section>
 
-    <!-- TAB 3: ATTENDANCE & HOMEWORK TRACKER (تسجيل الغياب والواجبات) -->
-    <section id="tab-attendance" class="tab-content hidden space-y-6">
+    <!-- TAB 3: SUBJECTS & QUICK TEST (المواد والإختبار السريع) -->
+    <section id="tab-subjects" class="tab-content hidden space-y-6">
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 class="text-xl font-bold text-slate-800">تسجيل الغياب والواجبات اليومية</h2>
-            <p class="text-xs text-slate-500">حدد التاريخ واحتسب الأيام الدراسية (الاثنين - الجمعة فقط)</p>
-          </div>
-          <div class="flex items-center gap-3">
-            <label class="text-sm font-bold text-slate-700">تاريخ اليوم الدراسي:</label>
-            <input type="date" id="attendance-date" onchange="loadAttendanceForDate()" class="px-3 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-brand-700 bg-slate-50 focus:ring-2 focus:ring-brand-500 outline-none">
-          </div>
-        </div>
+        <h2 class="text-xl font-bold text-slate-800 mb-1">أركان المواد المدمجة (اللغات والعلوم)</h2>
+        <p class="text-xs text-slate-500 mb-6">المواد المعتمدة: اللغة الفرنسية، الرياضيات، النشاط العلمي</p>
 
-        <!-- Class Filter for Attendance -->
-        <div class="flex items-center gap-2 mb-4 border-b border-slate-200 pb-3">
-          <button onclick="setAttendanceClass('ALL')" id="att-btn-all" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-brand-600 text-white">الكل</button>
-          <button onclick="setAttendanceClass('الخامس ابتدائي')" id="att-btn-5" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">الخامس ابتدائي</button>
-          <button onclick="setAttendanceClass('السادس ابتدائي')" id="att-btn-6" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">السادس ابتدائي</button>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-right text-sm">
-            <thead>
-              <tr class="bg-slate-100 text-slate-700">
-                <th class="p-3 rounded-r-xl">التلميذ</th>
-                <th class="p-3">المستوى</th>
-                <th class="p-3">حالة الغياب</th>
-                <th class="p-3">نوع الغياب</th>
-                <th class="p-3">عدم إنجاز الواجب</th>
-                <th class="p-3 rounded-l-xl">حالة الشغب</th>
-              </tr>
-            </thead>
-            <tbody id="attendance-table-body" class="divide-y divide-slate-100">
-              <!-- Rendered via JS -->
-            </tbody>
-          </table>
-        </div>
-
-        <div class="mt-6 flex justify-end">
-          <button onclick="saveCurrentAttendance()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transition flex items-center gap-2">
-            <i class="fa-solid fa-floppy-disk"></i> حفظ تسجيلات اليوم
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 4: ALERTS (تنبيهات هامة) -->
-    <section id="tab-alerts" class="tab-content hidden space-y-6">
-      <div class="bg-red-50 border border-red-200 p-6 rounded-2xl shadow-sm">
-        <div class="flex items-center gap-3">
-          <div class="bg-red-600 text-white p-3 rounded-xl">
-            <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-red-900">ركن التنبيهات الهامة والمتابعة الخاصة</h2>
-            <p class="text-xs text-red-700">يظهر هنا التلاميذ الغائبون مرتين أو أكثر خلال آخر 10 أيام دراسية، أو من تجاوزوا حدود عدم إنجاز الواجبات.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Absent Alerts Card -->
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
-            <i class="fa-solid fa-user-xmark text-red-500"></i> تنبيهات الغياب المكثف (آخر 10 أيام)
-          </h3>
-          <div id="alerts-absent-list" class="space-y-3">
-            <!-- Rendered via JS -->
-          </div>
-        </div>
-
-        <!-- Homework & Discipline Alerts -->
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
-            <i class="fa-solid fa-envelope-open-text text-amber-500"></i> تنبيهات استدعاء ولي الأمر والتعثر
-          </h3>
-          <div id="alerts-hw-list" class="space-y-3">
-            <!-- Rendered via JS -->
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 5: SETTINGS & BACKUP (تصدير واستيراد) -->
-    <section id="tab-settings" class="tab-content hidden space-y-6">
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <h2 class="text-xl font-bold text-slate-800 mb-2">إدارة البيانات والصيانة (Local Storage)</h2>
-        <p class="text-xs text-slate-500 mb-6">احفظ نسخة احتياطية من بياناتك أو استرجعها بسهولة لنقلها لجهاز آخر.</p>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Export Data -->
-          <div class="border border-slate-200 p-5 rounded-xl bg-slate-50">
-            <i class="fa-solid fa-file-export text-3xl text-brand-600 mb-3"></i>
-            <h3 class="font-bold text-slate-800 mb-1">تصدير البيانات (Backup)</h3>
-            <p class="text-xs text-slate-500 mb-4">قم بتنزيل كافة بيانات الموسم الدراسي في ملف JSON لحفظه بأمان.</p>
-            <button onclick="exportDataJSON()" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2">
-              <i class="fa-solid fa-download"></i> تصدير البيانات الآن
+        <!-- Subject Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <!-- French -->
+          <div class="border border-blue-200 bg-blue-50/50 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl font-bold mb-3 shadow">
+                <i class="fa-solid fa-language"></i>
+              </div>
+              <h3 class="font-bold text-lg text-blue-950">اللغة الفرنسية</h3>
+              <p class="text-xs text-slate-600 mt-1">الأنشطة الشفهية، القراءة، القواعد والإنشاء.</p>
+            </div>
+            <button onclick="openQuickTestModal('fr')" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-4 rounded-xl text-xs font-bold shadow flex items-center justify-center gap-2">
+              <i class="fa-solid fa-bolt"></i> إجراء اختبار سريع
             </button>
           </div>
 
-          <!-- Import Data -->
-          <div class="border border-slate-200 p-5 rounded-xl bg-slate-50">
-            <i class="fa-solid fa-file-import text-3xl text-emerald-600 mb-3"></i>
-            <h3 class="font-bold text-slate-800 mb-1">استيراد البيانات (Restore)</h3>
-            <p class="text-xs text-slate-500 mb-4">رفع ملف بيانات محفوض سابقاً لاستعادة معلومات جميع التلاميذ.</p>
-            <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importDataJSON(event)">
-            <button onclick="document.getElementById('import-file-input').click()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2">
-              <i class="fa-solid fa-upload"></i> اختيار ملف لاسترجاعه
+          <!-- Mathematics -->
+          <div class="border border-indigo-200 bg-indigo-50/50 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl font-bold mb-3 shadow">
+                <i class="fa-solid fa-calculator"></i>
+              </div>
+              <h3 class="font-bold text-lg text-indigo-950">الرياضيات</h3>
+              <p class="text-xs text-slate-600 mt-1">الأعداد والحساب، الهندسة، القياس وتنظيم البيانات.</p>
+            </div>
+            <button onclick="openQuickTestModal('math')" class="mt-6 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 px-4 rounded-xl text-xs font-bold shadow flex items-center justify-center gap-2">
+              <i class="fa-solid fa-bolt"></i> إجراء اختبار سريع
             </button>
           </div>
-        </div>
 
-        <!-- Danger Zone -->
-        <div class="mt-8 pt-6 border-t border-slate-200">
-          <h3 class="font-bold text-red-600 text-sm mb-2"><i class="fa-solid fa-triangle-exclamation"></i> منطقة الخطر</h3>
-          <p class="text-xs text-slate-500 mb-4">إعادة ضبط المصنع وتصفير كافة بيانات التلاميذ والغياب لهذا الموسم.</p>
-          <button onclick="resetAllData()" class="bg-red-100 hover:bg-red-200 text-red-700 border border-red-300 px-4 py-2 rounded-xl text-xs font-bold transition">
-            مسح جميع البيانات نهائياً
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 6: STUDENT SPACE (فضاء التلميذ الخاص) -->
-    <section id="tab-student-space" class="tab-content hidden space-y-6">
-      <div class="flex items-center justify-between no-print">
-        <button onclick="switchTab('students')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2">
-          <i class="fa-solid fa-arrow-right"></i> العودة لقائمة التلاميذ
-        </button>
-        <button onclick="printStudentReport()" class="bg-brand-700 hover:bg-brand-800 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow transition flex items-center gap-2">
-          <i class="fa-solid fa-print"></i> طبع بيان النقط (PDF Portrait)
-        </button>
-      </div>
-
-      <!-- Student Main Profile Header -->
-      <div id="student-profile-header" class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm relative overflow-hidden">
-        <!-- Header content injected by JS -->
-      </div>
-
-      <!-- Quick Actions for Student Points Addition -->
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm no-print">
-        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-circle-plus text-brand-600"></i> إضافة نقاط تحفيزية / تميز يدوي
-        </h3>
-        <div class="flex flex-wrap gap-2">
-          <button onclick="addIncentive('french', 3, 'عمل متميز في اللغة الفرنسية')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-2 rounded-xl text-xs font-bold transition">
-            +3 متميز لغة فرنسية
-          </button>
-          <button onclick="addIncentive('math', 3, 'عمل متميز في الرياضيات')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-2 rounded-xl text-xs font-bold transition">
-            +3 متميز رياضيات
-          </button>
-          <button onclick="addIncentive('science', 2, 'عمل متميز في النشاط العلمي')" class="bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 px-3 py-2 rounded-xl text-xs font-bold transition">
-            +2 متميز نشاط علمي
-          </button>
-          <button onclick="addIncentive('peer_help', 1, 'عمل تأطيري (مساعدة زميل)')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1">
-            <i class="fa-solid fa-medal text-amber-500"></i> +1 وسام التلميذ الأستاذ (24س)
-          </button>
-          <button onclick="addIncentive('disruption', -2, 'شغب مؤثر على سير الحصة')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-3 py-2 rounded-xl text-xs font-bold transition">
-            -2 شغب مؤثر
-          </button>
-        </div>
-      </div>
-
-      <!-- Student Records & Charts Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Records Overview Card -->
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <h3 class="font-bold text-slate-800 border-b pb-2 flex items-center gap-2">
-            <i class="fa-solid fa-chart-line text-brand-600"></i> إحصائيات وأرقام قياسية
-          </h3>
-
-          <div class="space-y-3">
-            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
-              <span class="text-xs font-bold text-slate-600">الرصيد التراكمي الحالي</span>
-              <span id="st-stat-current-points" class="text-lg font-black text-brand-600">0</span>
-            </div>
-            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
-              <span class="text-xs font-bold text-slate-600">الرقم القياسي للنقاط طيلة الموسم</span>
-              <span id="st-stat-max-points" class="text-lg font-black text-emerald-600">0</span>
-            </div>
-            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
-              <span class="text-xs font-bold text-slate-600">أقوى ترتيب وصل له طيلة الموسم</span>
-              <span id="st-stat-best-rank" class="text-lg font-black text-amber-600"># -</span>
-            </div>
-            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
-              <span class="text-xs font-bold text-slate-600">إجمالي الغيابات مبرر / غير مبرر</span>
-              <span id="st-stat-absences-count" class="text-sm font-bold text-slate-700">0 / 0</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Points Chart Visualizer -->
-        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-slate-800 flex items-center gap-2">
-              <i class="fa-solid fa-chart-area text-brand-600"></i> مبيان تتبع رصيد النقاط
-            </h3>
-            <div class="flex items-center gap-2 no-print">
-              <button onclick="updateStudentChart('10days')" id="btn-chart-10" class="px-3 py-1 bg-brand-600 text-white rounded-lg text-xs font-bold">آخر 10 أيام</button>
-              <button onclick="updateStudentChart('30days')" id="btn-chart-30" class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200">آخر شهر</button>
-            </div>
-          </div>
-          <div class="relative h-64 w-full">
-            <canvas id="studentPointsChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- History Activity Log -->
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-        <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
-          <i class="fa-solid fa-history text-slate-600"></i> سجل السلوك والنقاط والغياب
-        </h3>
-        <div class="overflow-x-auto">
-          <table class="w-full text-right text-xs">
-            <thead>
-              <tr class="bg-slate-100 text-slate-700">
-                <th class="p-2.5 rounded-r-lg">التاريخ</th>
-                <th class="p-2.5">النوع / البيان</th>
-                <th class="p-2.5">التغيير في النقاط</th>
-                <th class="p-2.5 rounded-l-lg">ملاحظات</th>
-              </tr>
-            </thead>
-            <tbody id="student-history-tbody" class="divide-y divide-slate-100">
-              <!-- Rendered by JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- PRINT REPORT AREA (HIDDEN UNTIL PRINT) -->
-  <div id="print-area" class="hidden">
-    <div class="watermark-container border-4 border-slate-800 p-8 min-h-[95vh] flex flex-col justify-between bg-white text-slate-900">
-      <!-- Watermark text -->
-      <div class="watermark-text">الأستاذ محمد الغمري</div>
-
-      <div>
-        <!-- Header -->
-        <div class="flex justify-between items-center border-b-2 border-slate-800 pb-4 mb-6">
-          <div class="text-center font-amiri font-bold">
-            <p class="text-sm">المملكة المغربية</p>
-            <p class="text-xs">وزارة التربية الوطنية والتعليم الأولي والرياضة</p>
-            <p class="text-xs">الموسم الدراسي: 2025 - 2026</p>
-          </div>
-          <div class="text-center">
-            <h1 class="text-2xl font-black font-amiri text-brand-900">بيان نقط ومتابعة التلميذ</h1>
-            <p class="text-xs font-semibold text-slate-600">تطبيق تدبير v1 - النظام التحفيزي</p>
-          </div>
-          <div class="text-left font-bold text-xs">
-            <p>تاريخ الإصدار:</p>
-            <p id="print-date" class="text-slate-700"></p>
-          </div>
-        </div>
-
-        <!-- Student Basic Info Box -->
-        <div class="grid grid-cols-2 gap-4 bg-slate-100 p-4 rounded-xl border border-slate-300 mb-6 font-semibold text-sm">
-          <div><span class="text-slate-500">الاسم الكامل:</span> <span id="print-st-name" class="font-bold text-slate-900"></span></div>
-          <div><span class="text-slate-500">المستوى الدراسي:</span> <span id="print-st-level" class="font-bold text-slate-900"></span></div>
-          <div><span class="text-slate-500">الجنس:</span> <span id="print-st-gender" class="font-bold text-slate-900"></span></div>
-          <div><span class="text-slate-500">الترتيب اللحظي في القسم:</span> <span id="print-st-rank" class="font-bold text-brand-700"></span></div>
-        </div>
-
-        <!-- Performance Summary -->
-        <div class="grid grid-cols-3 gap-4 mb-6 text-center">
-          <div class="border border-slate-300 p-3 rounded-lg bg-slate-50">
-            <div class="text-xs text-slate-500">رصيد الاجتهاد النهائي</div>
-            <div id="print-st-points" class="text-2xl font-black text-brand-800"></div>
-          </div>
-          <div class="border border-slate-300 p-3 rounded-lg bg-slate-50">
-            <div class="text-xs text-slate-500">أعلى رقم قياسي وصل له</div>
-            <div id="print-st-max" class="text-2xl font-black text-emerald-700"></div>
-          </div>
-          <div class="border border-slate-300 p-3 rounded-lg bg-slate-50">
-            <div class="text-xs text-slate-500">إجمالي الغياب (غير المبرر)</div>
-            <div id="print-st-absent" class="text-2xl font-black text-red-700"></div>
-          </div>
-        </div>
-
-        <!-- History Summary -->
-        <div class="mb-6">
-          <h3 class="font-bold text-sm mb-2 border-b border-slate-400 pb-1">أبرز الملاحظات والأنشطة التحفيزية الأخيرة:</h3>
-          <table class="w-full text-right text-xs border border-slate-300">
-            <thead>
-              <tr class="bg-slate-200">
-                <th class="p-2 border border-slate-300">التاريخ</th>
-                <th class="p-2 border border-slate-300">البيان</th>
-                <th class="p-2 border border-slate-300">النقاط</th>
-              </tr>
-            </thead>
-            <tbody id="print-history-body">
-              <!-- Rendered JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Signatures Footer -->
-      <div class="pt-8 flex justify-between items-end border-t border-slate-400 font-amiri">
-        <div class="text-center">
-          <p class="text-xs text-slate-500 mb-10">توقيع ولي الأمر</p>
-          <p class="text-xs">............................</p>
-        </div>
-        <div class="text-center">
-          <p class="text-sm font-bold mb-1 border-b border-slate-800 pb-0.5">خاتم وتوقيع الأستاذ</p>
-          <p class="text-lg font-bold text-brand-800">الأستاذ محمد الغمري</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: ADD STUDENT (إضافة تلميذ جديد) -->
-  <div id="addStudentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-fadeIn">
-      <div class="flex justify-between items-center mb-4 border-b pb-3">
-        <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-          <i class="fa-solid fa-user-plus text-brand-600"></i> إضافة تلميذ جديد
-        </h3>
-        <button onclick="closeModal('addStudentModal')" class="text-slate-400 hover:text-slate-600">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <form id="add-student-form" onsubmit="handleAddStudent(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">الاسم الكامل للتلميذ/ة</label>
-          <input type="text" id="new-student-name" required placeholder="مثال: أمين العلوي" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">الجنس</label>
-          <select id="new-student-gender" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-            <option value="ذكر">ذكر</option>
-            <option value="أنثى">أنثى</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">المستوى الدراسي</label>
-          <select id="new-student-level" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
-            <option value="الخامس ابتدائي">الخامس ابتدائي</option>
-            <option value="السادس ابتدائي">السادس ابتدائي</option>
-          </select>
-        </div>
-
-        <div class="pt-3 flex justify-end gap-2">
-          <button type="button" onclick="closeModal('addStudentModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">إلغاء</button>
-          <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow">حفظ التلميذ</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- JAVASCRIPT LOGIC -->
-  <script>
-    /* ==========================================================================
-       GLOBAL STATE & LOCALSTORAGE MANAGEMENT
-       ========================================================================== */
-    const STORAGE_KEY = 'TADBIR_V1_APP_DATA';
-
-    // Application Default Data Schema
-    let appData = {
-      students: [],
-      attendanceRecords: {}, // format: { 'YYYY-MM-DD': { studentId: { absent: true/false, type: 'مبرر'|'غير مبرر', hwNotDone: true/false, disruption: true/false } } }
-      incentivesLog: [], // format: { id, studentId, date, points, reason, type }
-    };
-
-    let activeStudentId = null;
-    let studentChartInstance = null;
-    let currentAttendanceFilterClass = 'ALL';
-
-    /* ==========================================================================
-       INITIALIZATION & SCHOOL DAYS HELPER
-       ========================================================================== */
-    window.addEventListener('DOMContentLoaded', () => {
-      loadDataFromStorage();
-      setupInitialDemoIfEmpty();
-      setCurrentDayText();
-      
-      // Set attendance default date to today
-      const todayStr = getTodayFormatted();
-      const dateInput = document.getElementById('attendance-date');
-      if (dateInput) dateInput.value = todayStr;
-
-      // Initial render
-      updateAllCalculations();
-      renderDashboard();
-      renderStudentsList();
-    });
-
-    // Save to LocalStorage
-    function saveDataToStorage() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
-      } catch (e) {
-        console.error('Error saving to local storage:', e);
-      }
-    }
-
-    // Load from LocalStorage
-    function loadDataFromStorage() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          appData = JSON.parse(stored);
-        } catch (e) {
-          console.error('Error parsing stored data:', e);
-        }
-      }
-    }
-
-    // Helper: Check if date is Mon-Fri (School Day)
-    function isSchoolDay(dateObj) {
-      const day = dateObj.getDay();
-      return day >= 1 && day <= 5; // 1 = Mon, ..., 5 = Fri
-    }
-
-    function getTodayFormatted() {
-      const today = new Date();
-      return today.toISOString().split('T')[0];
-    }
-
-    function setCurrentDayText() {
-      const now = new Date();
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      const dayName = now.toLocaleDateString('ar-MA', options);
-      const isSchool = isSchoolDay(now);
-      
-      document.getElementById('current-day-text').innerText = `${dayName} (${isSchool ? 'يوم دراسي' : 'عطلة نهاية الأسبوع'})`;
-    }
-
-    /* ==========================================================================
-       INITIAL DEMO DATA SETUP
-       ========================================================================== */
-    function setupInitialDemoIfEmpty() {
-      if (!appData.students || appData.students.length === 0) {
-        appData.students = [
-          { id: 'st-1', name: 'ياسين الفاسي', gender: 'ذكر', level: 'السادس ابتدائي', points: 15, maxPoints: 15, bestRank: 1, peerBadgeUntil: null },
-          { id: 'st-2', name: 'مريم التازي', gender: 'أنثى', level: 'السادس ابتدائي', points: 12, maxPoints: 12, bestRank: 2, peerBadgeUntil: null },
-          { id: 'st-3', name: 'عمر الناصري', gender: 'ذكر', level: 'الخامس ابتدائي', points: 8, maxPoints: 10, bestRank: 3, peerBadgeUntil: null },
-          { id: 'st-4', name: 'خديجة السوسي', gender: 'أنثى', level: 'الخامس ابتدائي', points: 5, maxPoints: 8, bestRank: 4, peerBadgeUntil: null },
-        ];
-        saveDataToStorage();
-      }
-    }
-
-    /* ==========================================================================
-       REAL-TIME POINT COMPUTATION & RANKING (V4 ENGINE)
-       ========================================================================== */
-    // Helper to get last N school days dates sorted descending
-    function getLastNSchoolDays(n = 10) {
-      const dates = [];
-      let current = new Date();
-      
-      while (dates.length < n) {
-        if (isSchoolDay(current)) {
-          dates.push(current.toISOString().split('T')[0]);
-        }
-        current.setDate(current.getDate() - 1);
-      }
-      return dates;
-    }
-
-    function updateAllCalculations() {
-      const last10SchoolDays = getLastNSchoolDays(10);
-
-      appData.students.forEach(student => {
-        let points = 10; // Base starting points
-        let unexcusedAbsence10Days = 0;
-        let totalUnexcused = 0;
-        let totalExcused = 0;
-        let weeklyHwMissedCount = 0;
-
-        // Process Attendance Log
-        Object.keys(appData.attendanceRecords).forEach(dateStr => {
-          const rec = appData.attendanceRecords[dateStr][student.id];
-          if (rec) {
-            if (rec.absent) {
-              if (rec.type === 'غير مبرر') {
-                totalUnexcused++;
-                if (last10SchoolDays.includes(dateStr)) {
-                  unexcusedAbsence10Days++;
-                }
-              } else {
-                totalExcused++;
-              }
-            }
-            if (rec.hwNotDone) weeklyHwMissedCount++;
-            if (rec.disruption) points -= 2; // -2 for disruption
-          }
-        });
-
-        // 1. Homework Rules:
-        if (weeklyHwMissedCount === 0) {
-          points += 5; // +5 automatically if no missed homework
-        } else if (weeklyHwMissedCount === 1) {
-          points += 2; // +2 for 1 miss
-        } else if (weeklyHwMissedCount === 2) {
-          points -= 2;
-        } else if (weeklyHwMissedCount >= 3) {
-          points -= 3;
-        }
-
-        // 2. Absence Rules:
-        if (unexcusedAbsence10Days >= 2) {
-          points -= 3; // -3 if 2+ unexcused absences in last 10 school days
-        }
-        if (totalUnexcused === 0) {
-          points += 1; // +1 for zero unexcused absence
-        }
-
-        // 3. Custom Incentives Log
-        const customLogs = (appData.incentivesLog || []).filter(l => l.studentId === student.id);
-        customLogs.forEach(log => {
-          points += log.points;
-        });
-
-        // Store computed values
-        student.points = points;
-        student.unexcusedAbsence10Days = unexcusedAbsence10Days;
-        student.totalUnexcused = totalUnexcused;
-        student.totalExcused = totalExcused;
-        student.weeklyHwMissedCount = weeklyHwMissedCount;
-
-        if (!student.maxPoints || points > student.maxPoints) {
-          student.maxPoints = points;
-        }
-      });
-
-      // Calculate Real-Time Ranks (en temps réel)
-      const sorted = [...appData.students].sort((a, b) => b.points - a.points);
-      sorted.forEach((st, idx) => {
-        const rank = idx + 1;
-        st.currentRank = rank;
-        if (!st.bestRank || rank < st.bestRank) {
-          st.bestRank = rank;
-        }
-      });
-
-      saveDataToStorage();
-      updateAlertsBadges();
-    }
-
-    function updateAlertsBadges() {
-      const alarmingStudents = appData.students.filter(s => s.unexcusedAbsence10Days >= 2);
-      const count = alarmingStudents.length;
-      
-      const badgeDesk = document.getElementById('alerts-badge');
-      const badgeMob = document.getElementById('alerts-badge-mobile');
-
-      if (count > 0) {
-        badgeDesk.innerText = count;
-        badgeDesk.classList.remove('hidden');
-        badgeMob.innerText = count;
-        badgeMob.classList.remove('hidden');
-      } else {
-        badgeDesk.classList.add('hidden');
-        badgeMob.classList.add('hidden');
-      }
-    }
-
-    /* ==========================================================================
-       TAB SWITCHING ROUTER
-       ========================================================================== */
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('bg-brand-800', 'text-white');
-        btn.classList.add('text-brand-100');
-      });
-
-      const target = document.getElementById(`tab-${tabId}`);
-      if (target) target.classList.remove('hidden');
-
-      const navBtn = document.getElementById(`nav-${tabId}`);
-      if (navBtn) {
-        navBtn.classList.add('bg-brand-800', 'text-white');
-        navBtn.classList.remove('text-brand-100');
-      }
-
-      // Tab specific re-renders
-      if (tabId === 'dashboard') renderDashboard();
-      if (tabId === 'students') renderStudentsList();
-      if (tabId === 'attendance') loadAttendanceForDate();
-      if (tabId === 'alerts') renderAlertsPage();
-    }
-
-    /* ==========================================================================
-       TAB 1: DASHBOARD RENDERER
-       ========================================================================== */
-    function renderDashboard() {
-      updateAllCalculations();
-
-      document.getElementById('stat-total-students').innerText = appData.students.length;
-      
-      // Top student badge
-      const topStudent = [...appData.students].sort((a, b) => b.points - a.points)[0];
-      document.getElementById('stat-top-student').innerText = topStudent ? topStudent.name : 'لا يوجد';
-
-      // Homework warnings count
-      const hwWarnings = appData.students.filter(s => s.weeklyHwMissedCount >= 1).length;
-      document.getElementById('stat-hw-warnings').innerText = hwWarnings;
-
-      // Absent alerts count
-      const absentAlerts = appData.students.filter(s => s.unexcusedAbsence10Days >= 2).length;
-      document.getElementById('stat-absent-alerts').innerText = absentAlerts;
-
-      // Render Top 5 list
-      const topListContainer = document.getElementById('top-students-list');
-      topListContainer.innerHTML = '';
-
-      const top5 = [...appData.students].sort((a, b) => b.points - a.points).slice(0, 5);
-
-      if (top5.length === 0) {
-        topListContainer.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">لم يتم إضافة تلاميذ بعد.</p>`;
-        return;
-      }
-
-      top5.forEach((st, index) => {
-        const isPeerActive = st.peerBadgeUntil && new Date(st.peerBadgeUntil) > new Date();
-        const card = document.createElement('div');
-        card.className = "flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-brand-50 transition cursor-pointer";
-        card.onclick = () => openStudentSpace(st.id);
-
-        card.innerHTML = `
-          <div class="flex items-center gap-3">
-            <span class="w-7 h-7 rounded-full ${index === 0 ? 'bg-amber-400 text-white' : index === 1 ? 'bg-slate-300 text-slate-700' : index === 2 ? 'bg-amber-700 text-white' : 'bg-slate-200 text-slate-600'} font-black text-xs flex items-center justify-center">
-              ${index + 1}
-            </span>
+          <!-- Science -->
+          <div class="border border-teal-200 bg-teal-50/50 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
             <div>
-              <div class="font-bold text-sm text-slate-800 flex items-center gap-1.5">
-                ${st.name}
-                ${isPeerActive ? `<span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold"><i class="fa-solid fa-medal text-amber-500"></i> التلميذ الأستاذ</span>` : ''}
+              <div class="w-12 h-12 bg-teal-600 text-white rounded-xl flex items-center justify-center text-xl font-bold mb-3 shadow">
+                <i class="fa-solid fa-flask"></i>
               </div>
-              <div class="text-[11px] text-slate-500">${st.level}</div>
+              <h3 class="font-bold text-lg text-teal-950">النشاط العلمي</h3>
+              <p class="text-xs text-slate-600 mt-1">صحّة الإنسان، العلوم والتكنولوجيا، والأرض والفضاء.</p>
             </div>
-          </div>
-          <div class="text-left">
-            <span class="text-lg font-black text-brand-700">${st.points}</span>
-            <span class="text-[10px] text-slate-400 block">نقطة اجتهاد</span>
-          </div>
-        `;
-        topListContainer.appendChild(card);
-      });
-    }
-
-    /* ==========================================================================
-       TAB 2: STUDENTS LIST & ADD STUDENT
-       ========================================================================== */
-    function renderStudentsList() {
-      updateAllCalculations();
-
-      const filterLevel = document.getElementById('filter-level').value;
-      const searchQuery = document.getElementById('search-student').value.trim().toLowerCase();
-      const grid = document.getElementById('students-grid');
-      grid.innerHTML = '';
-
-      let filtered = appData.students.filter(st => {
-        const matchLevel = filterLevel === 'ALL' || st.level === filterLevel;
-        const matchSearch = st.name.toLowerCase().includes(searchQuery);
-        return matchLevel && matchSearch;
-      });
-
-      if (filtered.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-full py-12 text-center text-slate-400">
-            <i class="fa-solid fa-user-slash text-4xl mb-2"></i>
-            <p class="text-sm font-semibold">لم يتم العثور على أي تلميذ يطابق المعايير.</p>
-          </div>
-        `;
-        return;
-      }
-
-      filtered.forEach(st => {
-        const isAbsentAlert = st.unexcusedAbsence10Days >= 2;
-        const isHwWarning = st.weeklyHwMissedCount === 1;
-        const isHwDanger = st.weeklyHwMissedCount >= 2;
-        const isPeerActive = st.peerBadgeUntil && new Date(st.peerBadgeUntil) > new Date();
-
-        // Card styling conditionally based on status
-        let borderStyle = 'border-slate-200 bg-white';
-        if (isAbsentAlert) {
-          borderStyle = 'flash-red'; // Dynamic RED FLASHING UPDATE
-        } else if (isHwWarning) {
-          borderStyle = 'warning-yellow border-2';
-        }
-
-        const card = document.createElement('div');
-        card.className = `p-5 rounded-2xl border shadow-sm transition hover:shadow-md cursor-pointer relative overflow-hidden ${borderStyle}`;
-        card.onclick = () => openStudentSpace(st.id);
-
-        card.innerHTML = `
-          ${isAbsentAlert ? `<div class="bg-red-600 text-white text-[10px] font-bold px-3 py-0.5 rounded-b-lg absolute top-0 left-1/2 -translate-x-1/2 shadow">تنبيه غياب مؤرق!</div>` : ''}
-
-          <div class="flex items-start justify-between mb-3 mt-1">
-            <div class="flex items-center gap-3">
-              <div class="w-11 h-11 rounded-2xl ${st.gender === 'ذكر' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'} font-bold flex items-center justify-center text-lg">
-                <i class="fa-solid ${st.gender === 'ذكر' ? 'fa-user-tie' : 'fa-user-nurse'}"></i>
-              </div>
-              <div>
-                <h3 class="font-bold text-slate-800 text-base flex items-center gap-1">
-                  ${st.name}
-                  ${isPeerActive ? `<i class="fa-solid fa-medal text-amber-500 text-xs" title="وسام التلميذ الأستاذ نشط"></i>` : ''}
-                </h3>
-                <p class="text-xs text-slate-500 font-semibold">${st.level}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Score & Rank Row -->
-          <div class="grid grid-cols-2 gap-2 my-3 p-2.5 bg-slate-50/80 rounded-xl text-center border border-slate-100">
-            <div>
-              <span class="text-[10px] text-slate-500 block">رصيد النقاط</span>
-              <span class="text-lg font-black text-brand-700">${st.points}</span>
-            </div>
-            <div>
-              <span class="text-[10px] text-slate-500 block">الترتيب اللحظي</span>
-              <span class="text-lg font-black text-amber-600">#${st.currentRank}</span>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
-            <span>غياب (10 أيام): <strong class="${st.unexcusedAbsence10Days >= 2 ? 'text-red-600 font-bold' : ''}">${st.unexcusedAbsence10Days}</strong></span>
-            <span class="text-brand-600 font-bold">دخول الفضاء <i class="fa-solid fa-chevron-left text-[9px]"></i></span>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    function handleAddStudent(e) {
-      e.preventDefault();
-      const name = document.getElementById('new-student-name').value.trim();
-      const gender = document.getElementById('new-student-gender').value;
-      const level = document.getElementById('new-student-level').value;
-
-      if (!name) return;
-
-      const newStudent = {
-        id: 'st-' + Date.now(),
-        name,
-        gender,
-        level,
-        points: 10,
-        maxPoints: 10,
-        bestRank: appData.students.length + 1,
-        peerBadgeUntil: null
-      };
-
-      appData.students.push(newStudent);
-      saveDataToStorage();
-      updateAllCalculations();
-      closeModal('addStudentModal');
-      showToast('تمت إضافة التلميذ بنجاح!', 'success');
-      
-      document.getElementById('add-student-form').reset();
-      renderStudentsList();
-    }
-
-    /* ==========================================================================
-       TAB 3: ATTENDANCE & DISCIPLINE SYSTEM
-       ========================================================================== */
-    function setAttendanceClass(cls) {
-      currentAttendanceFilterClass = cls;
-      document.getElementById('att-btn-all').className = cls === 'ALL' ? 'px-4 py-1.5 rounded-lg text-xs font-bold bg-brand-600 text-white' : 'px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200';
-      document.getElementById('att-btn-5').className = cls === 'الخامس ابتدائي' ? 'px-4 py-1.5 rounded-lg text-xs font-bold bg-brand-600 text-white' : 'px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200';
-      document.getElementById('att-btn-6').className = cls === 'السادس ابتدائي' ? 'px-4 py-1.5 rounded-lg text-xs font-bold bg-brand-600 text-white' : 'px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200';
-      
-      loadAttendanceForDate();
-    }
-
-    function loadAttendanceForDate() {
-      const dateStr = document.getElementById('attendance-date').value;
-      if (!dateStr) return;
-
-      const dateObj = new Date(dateStr);
-      if (!isSchoolDay(dateObj)) {
-        showToast('ملاحظة: التاريخ المحدد يوافق عطلة نهاية الأسبوع (السبت/الأحد)!', 'info');
-      }
-
-      const tbody = document.getElementById('attendance-table-body');
-      tbody.innerHTML = '';
-
-      const dayRecords = appData.attendanceRecords[dateStr] || {};
-
-      let filteredStudents = appData.students;
-      if (currentAttendanceFilterClass !== 'ALL') {
-        filteredStudents = filteredStudents.filter(s => s.level === currentAttendanceFilterClass);
-      }
-
-      if (filteredStudents.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">لا يوجد تلاميذ في هذا المستوى.</td></tr>`;
-        return;
-      }
-
-      filteredStudents.forEach(st => {
-        const rec = dayRecords[st.id] || { absent: false, type: 'غير مبرر', hwNotDone: false, disruption: false };
-
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-50 transition";
-
-        tr.innerHTML = `
-          <td class="p-3 font-bold text-slate-800">${st.name}</td>
-          <td class="p-3 text-xs text-slate-500">${st.level}</td>
-          <td class="p-3">
-            <label class="inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="att-absent-${st.id}" ${rec.absent ? 'checked' : ''} onchange="toggleAbsenceTypeVisibility('${st.id}')" class="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500">
-              <span class="mr-2 text-xs font-bold ${rec.absent ? 'text-red-600' : 'text-slate-600'}">غائب</span>
-            </label>
-          </td>
-          <td class="p-3">
-            <select id="att-type-${st.id}" class="${rec.absent ? '' : 'opacity-40 pointer-events-none'} px-2 py-1 bg-slate-100 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-1 focus:ring-brand-500">
-              <option value="غير مبرر" ${rec.type === 'غير مبرر' ? 'selected' : ''}>غير مبرر</option>
-              <option value="مبرر" ${rec.type === 'مبرر' ? 'selected' : ''}>مبرر</option>
-            </select>
-          </td>
-          <td class="p-3">
-            <label class="inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="att-hw-${st.id}" ${rec.hwNotDone ? 'checked' : ''} class="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500">
-              <span class="mr-2 text-xs text-slate-600">لم ينجز الواجب</span>
-            </label>
-          </td>
-          <td class="p-3">
-            <label class="inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="att-disrupt-${st.id}" ${rec.disruption ? 'checked' : ''} class="w-4 h-4 text-rose-600 rounded border-slate-300 focus:ring-rose-500">
-              <span class="mr-2 text-xs text-slate-600">شغب مؤثر (-2)</span>
-            </label>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function toggleAbsenceTypeVisibility(studentId) {
-      const isAbsent = document.getElementById(`att-absent-${studentId}`).checked;
-      const typeSelect = document.getElementById(`att-type-${studentId}`);
-      if (isAbsent) {
-        typeSelect.classList.remove('opacity-40', 'pointer-events-none');
-      } else {
-        typeSelect.classList.add('opacity-40', 'pointer-events-none');
-      }
-    }
-
-    function saveCurrentAttendance() {
-      const dateStr = document.getElementById('attendance-date').value;
-      if (!dateStr) return;
-
-      if (!appData.attendanceRecords[dateStr]) {
-        appData.attendanceRecords[dateStr] = {};
-      }
-
-      appData.students.forEach(st => {
-        const absentEl = document.getElementById(`att-absent-${st.id}`);
-        if (absentEl) { // check if present in current DOM view
-          const absent = absentEl.checked;
-          const type = document.getElementById(`att-type-${st.id}`).value;
-          const hwNotDone = document.getElementById(`att-hw-${st.id}`).checked;
-          const disruption = document.getElementById(`att-disrupt-${st.id}`).checked;
-
-          appData.attendanceRecords[dateStr][st.id] = { absent, type, hwNotDone, disruption };
-        }
-      });
-
-      updateAllCalculations();
-      showToast('تم حفظ تسجيلات اليوم وإعادة حساب النقاط والغياب بنجاح!', 'success');
-    }
-
-    /* ==========================================================================
-       TAB 4: ALERTS PAGE RENDERER
-       ========================================================================== */
-    function renderAlertsPage() {
-      updateAllCalculations();
-
-      const absentList = document.getElementById('alerts-absent-list');
-      const hwList = document.getElementById('alerts-hw-list');
-
-      absentList.innerHTML = '';
-      hwList.innerHTML = '';
-
-      // 1. High Absence Students (2+ in last 10 school days)
-      const alarmingAbsent = appData.students.filter(s => s.unexcusedAbsence10Days >= 2);
-
-      if (alarmingAbsent.length === 0) {
-        absentList.innerHTML = `<p class="text-xs text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-200">ممتاز! لا يوجد أي تلميذ يتجاوز غيابه مرتين في آخر 10 أيام دراسية.</p>`;
-      } else {
-        alarmingAbsent.forEach(st => {
-          const item = document.createElement('div');
-          item.className = "p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between";
-          item.innerHTML = `
-            <div>
-              <div class="font-bold text-sm text-red-900">${st.name} <span class="text-xs font-normal text-slate-500">(${st.level})</span></div>
-              <div class="text-xs text-red-700">تغيب <strong class="text-red-900">${st.unexcusedAbsence10Days} مرات</strong> غياب غير مبرر في آخر 10 أيام دراسية.</div>
-            </div>
-            <button onclick="openStudentSpace('${st.id}')" class="bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">معاينة</button>
-          `;
-          absentList.appendChild(item);
-        });
-      }
-
-      // 2. Homework Alerts (3+ misses = Parent Summon)
-      const alarmingHw = appData.students.filter(s => s.weeklyHwMissedCount >= 3);
-
-      if (alarmingHw.length === 0) {
-        hwList.innerHTML = `<p class="text-xs text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-200">لا يوجد تلاميذ في وضعية استدعاء ولي الأمر حالياً.</p>`;
-      } else {
-        alarmingHw.forEach(st => {
-          const item = document.createElement('div');
-          item.className = "p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between";
-          item.innerHTML = `
-            <div>
-              <div class="font-bold text-sm text-amber-900">${st.name} <span class="text-xs font-normal text-slate-500">(${st.level})</span></div>
-              <div class="text-xs text-amber-800">تخلف عن إنجاز الواجبات <strong class="text-amber-900">${st.weeklyHwMissedCount} مرات</strong> (يتطلب استدعاء ولي الأمر).</div>
-            </div>
-            <button onclick="openStudentSpace('${st.id}')" class="bg-amber-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">التفاصيل</button>
-          `;
-          hwList.appendChild(item);
-        });
-      }
-    }
-
-    /* ==========================================================================
-       TAB 6: STUDENT SPACE & GRAPH ENGINE
-       ========================================================================== */
-    function openStudentSpace(studentId) {
-      activeStudentId = studentId;
-      updateAllCalculations();
-
-      const student = appData.students.find(s => s.id === studentId);
-      if (!student) return;
-
-      switchTab('student-space');
-
-      // Render Header
-      const isPeerActive = student.peerBadgeUntil && new Date(student.peerBadgeUntil) > new Date();
-      const headerEl = document.getElementById('student-profile-header');
-
-      headerEl.innerHTML = `
-        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div class="flex items-center gap-4">
-            <div class="w-16 h-16 rounded-2xl ${student.gender === 'ذكر' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'} font-black text-2xl flex items-center justify-center border-2 border-brand-200 shadow-sm">
-              <i class="fa-solid ${student.gender === 'ذكر' ? 'fa-user-tie' : 'fa-user-nurse'}"></i>
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h2 class="text-2xl font-black text-slate-800">${student.name}</h2>
-                ${isPeerActive ? `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1 border border-amber-300"><i class="fa-solid fa-medal text-amber-500"></i> وسام التلميذ الأستاذ</span>` : ''}
-              </div>
-              <p class="text-xs text-slate-500 font-semibold mt-0.5">${student.level} | الجنس: ${student.gender}</p>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-3">
-            <div class="text-center bg-brand-50 border border-brand-100 px-4 py-2 rounded-xl">
-              <span class="text-[10px] text-brand-700 font-bold block">رصيد النقاط الحصري</span>
-              <span class="text-2xl font-black text-brand-700">${student.points}</span>
-            </div>
-            <div class="text-center bg-amber-50 border border-amber-100 px-4 py-2 rounded-xl">
-              <span class="text-[10px] text-amber-700 font-bold block">الترتيب اللحظي</span>
-              <span class="text-2xl font-black text-amber-600">#${student.currentRank}</span>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Update Numerical Overview
-      document.getElementById('st-stat-current-points').innerText = student.points;
-      document.getElementById('st-stat-max-points').innerText = student.maxPoints || student.points;
-      document.getElementById('st-stat-best-rank').innerText = `#${student.bestRank || student.currentRank}`;
-      document.getElementById('st-stat-absences-count').innerText = `${student.totalExcused} مبرر / ${student.totalUnexcused} غير مبرر`;
-
-      // Render History Log Table
-      renderStudentHistoryTable(studentId);
-
-      // Render Chart
-      updateStudentChart('10days');
-    }
-
-    function addIncentive(type, points, reason) {
-      if (!activeStudentId) return;
-
-      const student = appData.students.find(s => s.id === activeStudentId);
-      if (!student) return;
-
-      const log = {
-        id: 'inc-' + Date.now(),
-        studentId: activeStudentId,
-        date: getTodayFormatted(),
-        points: points,
-        reason: reason,
-        type: type
-      };
-
-      if (type === 'peer_help') {
-        // Grant "Student Teacher" badge for 24 hours
-        const badgeExpiry = new Date();
-        badgeExpiry.setHours(badgeExpiry.getHours() + 24);
-        student.peerBadgeUntil = badgeExpiry.toISOString();
-        showToast('تمت إضافة الوسام وتفعيله لمدة 24 ساعة!', 'info');
-      }
-
-      if (!appData.incentivesLog) appData.incentivesLog = [];
-      appData.incentivesLog.push(log);
-
-      saveDataToStorage();
-      showToast(`تم تغيير نقاط التلميذ بـ (${points > 0 ? '+' + points : points}) بنجاح!`, 'success');
-
-      openStudentSpace(activeStudentId);
-    }
-
-    function renderStudentHistoryTable(studentId) {
-      const tbody = document.getElementById('student-history-tbody');
-      tbody.innerHTML = '';
-
-      const logs = (appData.incentivesLog || []).filter(l => l.studentId === studentId);
-
-      if (logs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-400">لا توجد أشرطة تحفيزية مسجلة يدواً لهذا التلميذ بعد.</td></tr>`;
-        return;
-      }
-
-      logs.reverse().forEach(l => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="p-2.5 font-semibold text-slate-600">${l.date}</td>
-          <td class="p-2.5 font-bold text-slate-800">${l.reason}</td>
-          <td class="p-2.5 font-black ${l.points > 0 ? 'text-emerald-600' : 'text-red-600'}">${l.points > 0 ? '+' + l.points : l.points}</td>
-          <td class="p-2.5 text-slate-400">سجل تلقائي</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    /* ==========================================================================
-       CHART.JS INTEGRATION
-       ========================================================================== */
-    function updateStudentChart(range) {
-      if (!activeStudentId) return;
-
-      // Update button visual styles
-      document.getElementById('btn-chart-10').className = range === '10days' ? 'px-3 py-1 bg-brand-600 text-white rounded-lg text-xs font-bold' : 'px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200';
-      document.getElementById('btn-chart-30').className = range === '30days' ? 'px-3 py-1 bg-brand-600 text-white rounded-lg text-xs font-bold' : 'px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200';
-
-      const schoolDaysCount = range === '10days' ? 10 : 20;
-      const days = getLastNSchoolDays(schoolDaysCount).reverse();
-
-      // Simulate Points Trend over school days
-      const student = appData.students.find(s => s.id === activeStudentId);
-      let runningPoints = 10;
-      const pointsTrend = days.map(day => {
-        // check attendance impact for this day
-        const rec = appData.attendanceRecords[day] ? appData.attendanceRecords[day][student.id] : null;
-        if (rec) {
-          if (rec.disruption) runningPoints -= 2;
-          if (rec.hwNotDone) runningPoints -= 1;
-        }
-        // check custom logs for this day
-        const customLogs = (appData.incentivesLog || []).filter(l => l.studentId === student.id && l.date === day);
-        customLogs.forEach(l => runningPoints += l.points);
-
-        return runningPoints;
-      });
-
-      const ctx = document.getElementById('studentPointsChart').getContext('2d');
-
-      if (studentChartInstance) {
-        studentChartInstance.destroy();
-      }
-
-      studentChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: days.map(d => d.slice(5)), // display MM-DD
-          datasets: [{
-            label: 'رصيد نقاط الاجتهاد',
-            data: pointsTrend,
-            borderColor: '#2563eb',
-            backgroundColor: 'rgba(37, 99, 235, 0.08)',
-            fill: true,
-            tension: 0.3,
-            borderWidth: 3,
-            pointRadius: 4,
-            pointBackgroundColor: '#1d4ed8'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              grid: { color: '#f1f5f9' }
-            },
-            x: {
-              grid: { display: false }
-            }
-          }
-        }
-      });
-    }
-
-    /* ==========================================================================
-       PDF PORTRAIT REPORT PRINTING (مع العلامة المائية مائلة)
-       ========================================================================== */
-    function printStudentReport() {
-      if (!activeStudentId) return;
-
-      const student = appData.students.find(s => s.id === activeStudentId);
-      if (!student) return;
-
-      // Populate print template
-      document.getElementById('print-date').innerText = new Date().toLocaleDateString('ar-MA');
-      document.getElementById('print-st-name').innerText = student.name;
-      document.getElementById('print-st-level').innerText = student.level;
-      document.getElementById('print-st-gender').innerText = student.gender;
-      document.getElementById('print-st-rank').innerText = `#${student.currentRank}`;
-
-      document.getElementById('print-st-points').innerText = student.points;
-      document.getElementById('print-st-max').innerText = student.maxPoints || student.points;
-      document.getElementById('print-st-absent').innerText = student.totalUnexcused;
-
-      // Print table history
-      const printTbody = document.getElementById('print-history-body');
-      printTbody.innerHTML = '';
-
-      const logs = (appData.incentivesLog || []).filter(l => l.studentId === student.id).slice(-5);
-      if (logs.length === 0) {
-        printTbody.innerHTML = `<tr><td colspan="3" class="p-2 text-center text-slate-400">لا توجد ملاحظات استثنائية مسجلة.</td></tr>`;
-      } else {
-        logs.forEach(l => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td class="p-2 border border-slate-300">${l.date}</td>
-            <td class="p-2 border border-slate-300">${l.reason}</td>
-            <td class="p-2 border border-slate-300 font-bold">${l.points > 0 ? '+' + l.points : l.points}</td>
-          `;
-          printTbody.appendChild(tr);
-        });
-      }
-
-      // Show print area and trigger browser print dialog
-      const printArea = document.getElementById('print-area');
-      printArea.classList.remove('hidden');
-
-      window.print();
-
-      // Re-hide after printing
-      setTimeout(() => {
-        printArea.classList.add('hidden');
-      }, 500);
-    }
-
-    /* ==========================================================================
-       IMPORT / EXPORT JSON DATA MANAGEMENT
-       ========================================================================== */
-    function exportDataJSON() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `Tadbir_V1_Backup_${getTodayFormatted()}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-
-      showToast('تم تحميل ملف النسخة الاحتياطية بنجاح!', 'success');
-    }
-
-    function importDataJSON(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const imported = JSON.parse(e.target.result);
-          if (imported.students && Array.isArray(imported.students)) {
-            appData = imported;
-            saveDataToStorage();
-            updateAllCalculations();
-            renderDashboard();
-            renderStudentsList();
-            showToast('تمت استعادة البيانات بنجاح تام!', 'success');
-          } else {
-            showToast('الملف المرفوع غير صالح للبرنامج!', 'error');
-          }
-        } catch (err) {
-          showToast('حدث خطأ أثناء قراءة الملف!', 'error');
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    function resetAllData() {
-      if (confirm('هل أنت أستاذي الكريم متأكد من مسح جميع بيانات التلاميذ والغيابات نهائياً؟')) {
-        localStorage.removeItem(STORAGE_KEY);
-        appData = { students: [], attendanceRecords: {}, incentivesLog: [] };
-        updateAllCalculations();
-        renderDashboard();
-        renderStudentsList();
-        showToast('تم مسح جميع البيانات بنجاح.', 'info');
-      }
-    }
-
-    /* ==========================================================================
-       UI UTILITIES (MODALS & TOAST NOTIFICATIONS)
-       ========================================================================== */
-    function openModal(id) {
-      const modal = document.getElementById(id);
-      if (modal) modal.classList.remove('hidden');
-    }
-
-    function closeModal(id) {
-      const modal = document.getElementById(id);
-      if (modal) modal.classList.add('hidden');
-    }
-
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-
-      let bgClass = 'bg-slate-800 text-white';
-      if (type === 'success') bgClass = 'bg-emerald-600 text-white';
-      if (type === 'error') bgClass = 'bg-red-600 text-white';
-      if (type === 'info') bgClass = 'bg-brand-600 text-white';
-
-      toast.className = `px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg pointer-events-auto transition duration-300 transform translate-y-2 ${bgClass}`;
-      toast.innerText = message;
-
-      container.appendChild(toast);
-
-      setTimeout(() => {
-        toast.classList.add('opacity-0', '-translate-y-2');
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    }
-  </script>
-</body>
-</html>
-
-```
+            <button onclick="openQuickTestModal('sci')" class="mt-6 bg-teal-600 hover:bg-teal-700 text-white py-2.5 px-4 rounded-xl text-xs font-bold shadow flex items-center justify-center gap-2">
+              <i class="fa-solid fa-bolt"></i> إجراء اختبار سريع
+            </button>
+          </d
